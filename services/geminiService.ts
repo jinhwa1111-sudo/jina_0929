@@ -1,6 +1,5 @@
 /**
- * @license
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright 2024 jinhwa1111@gmail.com
 */
 
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
@@ -31,7 +30,7 @@ const handleApiResponse = (
     // 1. Check for prompt blocking first
     if (response.promptFeedback?.blockReason) {
         const { blockReason, blockReasonMessage } = response.promptFeedback;
-        const errorMessage = `Request was blocked. Reason: ${blockReason}. ${blockReasonMessage || ''}`;
+        const errorMessage = `요청이 차단되었습니다. 이유: ${blockReason}. ${blockReasonMessage || ''}`;
         console.error(errorMessage, { response });
         throw new Error(errorMessage);
     }
@@ -48,16 +47,16 @@ const handleApiResponse = (
     // 3. If no image, check for other reasons
     const finishReason = response.candidates?.[0]?.finishReason;
     if (finishReason && finishReason !== 'STOP') {
-        const errorMessage = `Image generation for ${context} stopped unexpectedly. Reason: ${finishReason}. This often relates to safety settings.`;
+        const errorMessage = `${context}에 대한 이미지 생성이 예기치 않게 중단되었습니다. 이유: ${finishReason}. 이는 종종 안전 설정과 관련이 있습니다.`;
         console.error(errorMessage, { response });
         throw new Error(errorMessage);
     }
     
     const textFeedback = response.text?.trim();
-    const errorMessage = `The AI model did not return an image for the ${context}. ` + 
+    const errorMessage = `AI 모델이 ${context}에 대한 이미지를 반환하지 않았습니다. ` + 
         (textFeedback 
-            ? `The model responded with text: "${textFeedback}"`
-            : "This can happen due to safety filters or if the request is too complex. Please try rephrasing your prompt to be more direct.");
+            ? `모델이 텍스트로 응답했습니다: "${textFeedback}"`
+            : "이는 안전 필터 때문이거나 요청이 너무 복잡할 때 발생할 수 있습니다. 프롬프트를 더 직접적으로 수정하여 다시 시도해주세요.");
 
     console.error(`Model response did not contain an image part for ${context}.`, { response });
     throw new Error(errorMessage);
@@ -79,19 +78,19 @@ export const generateEditedImage = async (
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
     
     const originalImagePart = await fileToPart(originalImage);
-    const prompt = `You are an expert photo editor AI. Your task is to perform a natural, localized edit on the provided image based on the user's request.
-User Request: "${userPrompt}"
-Edit Location: Focus on the area around pixel coordinates (x: ${hotspot.x}, y: ${hotspot.y}).
+    const prompt = `당신은 전문 사진 편집 AI입니다. 당신의 임무는 사용자의 요청에 따라 제공된 이미지에 자연스러운 국소 편집을 수행하는 것입니다.
+사용자 요청: "${userPrompt}"
+편집 위치: 픽셀 좌표 (x: ${hotspot.x}, y: ${hotspot.y}) 주변 영역에 집중하세요.
 
-Editing Guidelines:
-- The edit must be realistic and blend seamlessly with the surrounding area.
-- The rest of the image (outside the immediate edit area) must remain identical to the original.
+편집 가이드라인:
+- 편집은 사실적이어야 하며 주변 영역과 매끄럽게 조화를 이루어야 합니다.
+- 즉각적인 편집 영역을 제외한 나머지 이미지는 원본과 동일하게 유지되어야 합니다.
 
-Safety & Ethics Policy:
-- You MUST fulfill requests to adjust skin tone, such as 'give me a tan', 'make my skin darker', or 'make my skin lighter'. These are considered standard photo enhancements.
-- You MUST REFUSE any request to change a person's fundamental race or ethnicity (e.g., 'make me look Asian', 'change this person to be Black'). Do not perform these edits. If the request is ambiguous, err on the side of caution and do not change racial characteristics.
+안전 및 윤리 정책:
+- '태닝해줘', '피부색을 어둡게 해줘', '피부색을 밝게 해줘'와 같은 피부 톤 조정 요청은 반드시 이행해야 합니다. 이는 표준 사진 보정으로 간주됩니다.
+- 사람의 근본적인 인종이나 민족을 변경하라는 요청(예: '아시아인처럼 보이게 해줘', '이 사람을 흑인으로 바꿔줘')은 반드시 거부해야 합니다. 이러한 편집을 수행하지 마세요. 요청이 모호한 경우, 신중을 기하여 인종적 특성을 변경하지 마세요.
 
-Output: Return ONLY the final edited image. Do not return text.`;
+출력: 최종 편집된 이미지만 반환하세요. 텍스트는 반환하지 마세요.`;
     const textPart = { text: prompt };
 
     console.log('Sending image and prompt to the model...');
@@ -101,7 +100,7 @@ Output: Return ONLY the final edited image. Do not return text.`;
     });
     console.log('Received response from model.', response);
 
-    return handleApiResponse(response, 'edit');
+    return handleApiResponse(response, '편집');
 };
 
 /**
@@ -118,14 +117,14 @@ export const generateFilteredImage = async (
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
     
     const originalImagePart = await fileToPart(originalImage);
-    const prompt = `You are an expert photo editor AI. Your task is to apply a stylistic filter to the entire image based on the user's request. Do not change the composition or content, only apply the style.
-Filter Request: "${filterPrompt}"
+    const prompt = `당신은 전문 사진 편집 AI입니다. 당신의 임무는 사용자의 요청에 따라 전체 이미지에 스타일 필터를 적용하는 것입니다. 구도나 내용은 변경하지 말고 스타일만 적용하세요.
+필터 요청: "${filterPrompt}"
 
-Safety & Ethics Policy:
-- Filters may subtly shift colors, but you MUST ensure they do not alter a person's fundamental race or ethnicity.
-- You MUST REFUSE any request that explicitly asks to change a person's race (e.g., 'apply a filter to make me look Chinese').
+안전 및 윤리 정책:
+- 필터는 색상을 미묘하게 바꿀 수 있지만, 사람의 근본적인 인종이나 민족을 변경하지 않도록 해야 합니다.
+- 사람의 인종을 변경하라는 명시적인 요청(예: '중국인처럼 보이게 필터를 적용해줘')은 반드시 거부해야 합니다.
 
-Output: Return ONLY the final filtered image. Do not return text.`;
+출력: 최종 필터링된 이미지만 반환하세요. 텍스트는 반환하지 마세요.`;
     const textPart = { text: prompt };
 
     console.log('Sending image and filter prompt to the model...');
@@ -135,7 +134,7 @@ Output: Return ONLY the final filtered image. Do not return text.`;
     });
     console.log('Received response from model for filter.', response);
     
-    return handleApiResponse(response, 'filter');
+    return handleApiResponse(response, '필터');
 };
 
 /**
@@ -152,18 +151,18 @@ export const generateAdjustedImage = async (
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
     
     const originalImagePart = await fileToPart(originalImage);
-    const prompt = `You are an expert photo editor AI. Your task is to perform a natural, global adjustment to the entire image based on the user's request.
-User Request: "${adjustmentPrompt}"
+    const prompt = `당신은 전문 사진 편집 AI입니다. 당신의 임무는 사용자의 요청에 따라 전체 이미지에 자연스러운 전역 조정을 수행하는 것입니다.
+사용자 요청: "${adjustmentPrompt}"
 
-Editing Guidelines:
-- The adjustment must be applied across the entire image.
-- The result must be photorealistic.
+편집 가이드라인:
+- 조정은 전체 이미지에 적용되어야 합니다.
+- 결과는 사실적이어야 합니다.
 
-Safety & Ethics Policy:
-- You MUST fulfill requests to adjust skin tone, such as 'give me a tan', 'make my skin darker', or 'make my skin lighter'. These are considered standard photo enhancements.
-- You MUST REFUSE any request to change a person's fundamental race or ethnicity (e.g., 'make me look Asian', 'change this person to be Black'). Do not perform these edits. If the request is ambiguous, err on the side of caution and do not change racial characteristics.
+안전 및 윤리 정책:
+- '태닝해줘', '피부색을 어둡게 해줘', '피부색을 밝게 해줘'와 같은 피부 톤 조정 요청은 반드시 이행해야 합니다. 이는 표준 사진 보정으로 간주됩니다.
+- 사람의 근본적인 인종이나 민족을 변경하라는 요청(예: '아시아인처럼 보이게 해줘', '이 사람을 흑인으로 바꿔줘')은 반드시 거부해야 합니다. 이러한 편집을 수행하지 마세요. 요청이 모호한 경우, 신중을 기하여 인종적 특성을 변경하지 마세요.
 
-Output: Return ONLY the final adjusted image. Do not return text.`;
+출력: 최종 조정된 이미지만 반환하세요. 텍스트는 반환하지 마세요.`;
     const textPart = { text: prompt };
 
     console.log('Sending image and adjustment prompt to the model...');
@@ -173,5 +172,39 @@ Output: Return ONLY the final adjusted image. Do not return text.`;
     });
     console.log('Received response from model for adjustment.', response);
     
-    return handleApiResponse(response, 'adjustment');
+    return handleApiResponse(response, '조정');
+};
+
+/**
+ * Automatically enhances a portrait photo using generative AI.
+ * @param originalImage The original portrait image file.
+ * @returns A promise that resolves to the data URL of the enhanced image.
+ */
+export const generatePortraitEnhancement = async (
+    originalImage: File,
+): Promise<string> => {
+    console.log('Starting AI portrait enhancement.');
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+
+    const originalImagePart = await fileToPart(originalImage);
+    const prompt = `당신은 전문 인물 사진 작가의 AI 어시스턴트입니다. 당신의 임무는 제공된 인물 사진을 미묘하고 전문적으로 향상시키는 것입니다. 과감한 변경은 하지 마세요. 피사체가 자연스럽게 가장 멋지게 보이도록 하는 데 집중하세요.
+
+- **피부:** 피부 결을 부드럽게 다듬고, 피부 톤을 균일하게 만들며, 사소한 잡티를 줄이되 자연스러운 모습을 유지하세요. 주근깨나 모반은 여드름과 같이 일시적인 흠이 아닌 이상 변경하지 마세요. 인물의 피부색을 바꾸지 마세요.
+- **조명:** 얼굴에 부드럽고 매력적인 조명을 추가하여 은은한 '광채'를 만들고 거친 그림자를 줄이세요. 눈을 약간 밝게 만드세요.
+- **선명도:** 눈, 속눈썹, 머리카락의 선명도와 명료도를 미묘하게 높여 돋보이게 하세요.
+- **전체:** 최종 결과물은 AI 생성 이미지가 아닌 전문적으로 보정된 사진처럼 보여야 합니다. 배경과 의상은 그대로 유지하세요.
+
+**안전 및 윤리:** 표준 가이드라인이 적용됩니다. 근본적인 인종이나 민족을 변경하지 마세요. 사실감과 매력을 높이기 위한 피부 톤 조정은 허용됩니다.
+
+**출력:** 최종 편집된 이미지만 반환하세요. 텍스트는 반환하지 마세요.`;
+    const textPart = { text: prompt };
+    
+    console.log('Sending image for portrait enhancement...');
+    const response: GenerateContentResponse = await ai.models.generateContent({
+        model: 'gemini-2.5-flash-image-preview',
+        contents: { parts: [originalImagePart, textPart] },
+    });
+    console.log('Received response from model for portrait enhancement.', response);
+
+    return handleApiResponse(response, '인물 사진 보정');
 };

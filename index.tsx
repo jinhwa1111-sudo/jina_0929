@@ -1,6 +1,5 @@
 /**
- * @license
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright 2024 jinhwa1111@gmail.com
 */
 
 import React from 'react';

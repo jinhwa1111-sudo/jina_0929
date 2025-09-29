@@ -1,0 +1,10 @@
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #FFFFFF;
+}
+
+:root {
+  --theme-primary: #351e66; /* Pantone 268 C */
+  --theme-primary-light: #482c84;
+  --theme-primary-lighter: #593aa1;
+}
